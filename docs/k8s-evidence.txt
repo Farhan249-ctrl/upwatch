@@ -1,0 +1,245 @@
+================================================================================
+UpWatch Stage 4 - Kubernetes on Minikube Evidence
+Generated: 2026-11-11T13:13:30Z (Local: 2026-11-11 18:43:30 +05:30)
+================================================================================
+
+CLUSTER & ENVIRONMENT HEADER
+--------------------------------------------------------------------------------
+Kubernetes Server Version: v1.37.0
+Kubernetes Client Version: v1.36.1
+Kustomize Version:         v5.8.1
+Minikube Version:          v1.39.0
+Host OS:                   Microsoft Windows 11 Pro 26H2
+Driver:                    docker (4 CPUs, 4096 MB RAM)
+Total Host Engine Memory:  7984685056 bytes (7.43 GB)
+
+COMMAND: kubectl version
+OUTPUT:
+Client Version: v1.36.1
+Kustomize Version: v5.8.1
+Server Version: v1.37.0
+
+COMMAND: kubectl get pods,svc,pvc,ingress -n upwatch
+OUTPUT:
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/api-7754f66d89-dztb2        1/1     Running   0          39s
+pod/api-7754f66d89-hgvjq        1/1     Running   0          29s
+pod/frontend-7466f57b74-qglvb   1/1     Running   0          14m
+pod/frontend-7466f57b74-tc87w   1/1     Running   0          14m
+pod/mongo-668d7cb647-s52r4      1/1     Running   0          2m29s
+pod/worker-767ddb99df-x4r98     1/1     Running   0          7m41s
+
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)     AGE
+service/api        ClusterIP   10.96.52.141    <none>        4000/TCP    14m
+service/frontend   ClusterIP   10.107.46.197   <none>        80/TCP      14m
+service/mongo      ClusterIP   10.108.249.21   <none>        27017/TCP   14m
+
+NAME                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/mongo-pvc   Bound    pvc-2bf1e430-4972-40ef-9057-3bef9e055744   1Gi        RWO            standard       <unset>                 14m
+
+NAME                                        CLASS   HOSTS   ADDRESS        PORTS   AGE
+ingress.networking.k8s.io/upwatch-ingress   nginx   *       192.168.49.2   80      14m
+
+PORT-FORWARD SETUP
+--------------------------------------------------------------------------------
+Command: kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8086:80
+Forwarding from 127.0.0.1:8086 -> 80
+Forwarding from [::1]:8086 -> 80
+
+================================================================================
+PROOF 1: HEALTH
+Timestamp: 2026-11-11T13:06:21Z
+================================================================================
+COMMAND:
+curl.exe -s -o NUL -w "%{http_code}`n" http://localhost:8086/
+curl.exe -s -o NUL -w "%{http_code}`n" http://localhost:8086/api/health
+curl.exe -s http://localhost:8086/api/health
+
+OUTPUT:
+200
+200
+{"status":"ok","uptime":63.380483244,"timestamp":"2026-11-11T13:06:21.072Z"}
+
+VERDICT: PASS
+
+================================================================================
+PROOF 2: FUNCTIONAL (REGISTRATION, LOGIN, MONITOR CREATION, BACKGROUND CHECK)
+Timestamp: 2026-11-11T13:07:05Z - 2026-11-11T13:07:50Z
+================================================================================
+COMMAND (Register):
+POST http://localhost:8086/api/auth/register
+Body: {"name":"K8s Tester","email":"k8s-tester@upwatch.dev","password":"[REDACTED]"}
+OUTPUT:
+Registered user: k8s-tester@upwatch.dev (ID: 6af468779ac245fab24e89f1)
+
+COMMAND (Login):
+POST http://localhost:8086/api/auth/login
+Body: {"email":"k8s-tester@upwatch.dev","password":"[REDACTED]"}
+OUTPUT:
+Login token acquired.
+
+COMMAND (Create Monitor):
+POST http://localhost:8086/api/monitors
+Body: {"name":"Example Test","url":"https://example.com","intervalSeconds":15}
+OUTPUT:
+Created monitor ID: 6af468799ac245fab24e89f2, Name: Example Test, Interval: 15s, State: UNKNOWN
+
+COMMAND (Wait ~40s and Query Monitor & Checks):
+GET http://localhost:8086/api/monitors/6af468799ac245fab24e89f2
+GET http://localhost:8086/api/monitors/6af468799ac245fab24e89f2/checks
+
+OUTPUT:
+Monitor ID: 6af468799ac245fab24e89f2
+Monitor Name: Example Test
+Monitor State: UP
+Total checks count: 3
+Check timestamp: 2026-11-11T13:07:41.031Z status: UP responseTimeMs: 124 statusCode: 200
+Check timestamp: 2026-11-11T13:07:21.039Z status: UP responseTimeMs: 118 statusCode: 200
+Check timestamp: 2026-11-11T13:07:06.427Z status: UP responseTimeMs: 135 statusCode: 200
+
+VERDICT: PASS
+
+================================================================================
+PROOF 3: WORKER SCALE (ATOMIC CLAIMING VERIFICATION)
+Timestamp: 2026-11-11T13:08:01Z - 2026-11-11T13:09:43Z
+================================================================================
+COMMAND (Scale to 2 replicas):
+kubectl scale deployment/worker --replicas=2 -n upwatch
+kubectl rollout status deployment/worker -n upwatch --timeout=60s
+kubectl get pods -l app=worker -n upwatch
+
+OUTPUT:
+deployment.apps/worker scaled
+Waiting for deployment "worker" rollout to finish: 1 of 2 updated replicas are available...
+deployment "worker" successfully rolled out
+NAME                      READY   STATUS    RESTARTS   AGE
+worker-767ddb99df-bwmjq   1/1     Running   0          2s
+worker-767ddb99df-x4r98   1/1     Running   0          2m45s
+
+MEASUREMENT OVER 60 SECONDS (13:08:11Z to 13:09:11Z):
+Window Start: 2026-11-11T13:08:11.5060000+00:00
+Window End:   2026-11-11T13:09:11.7280000+00:00
+Worker replicas during window: 2
+Checks recorded in 60s window: 4
+  - ts: 2026-11-11T13:08:16.042Z statusCode: 200
+  - ts: 2026-11-11T13:08:34.258Z statusCode: 200
+  - ts: 2026-11-11T13:08:48.959Z statusCode: 200
+  - ts: 2026-11-11T13:09:06.029Z statusCode: 200
+
+Rate Analysis:
+For a 15 s monitor interval, expected check count in 60 seconds is ~4 checks.
+Recorded count: 4 checks.
+the atomic findOneAndUpdate claim prevents double checking
+
+COMMAND (Scale back to 1 replica):
+kubectl scale deployment/worker --replicas=1 -n upwatch
+kubectl rollout status deployment/worker -n upwatch --timeout=60s
+kubectl get pods -l app=worker -n upwatch
+
+OUTPUT:
+deployment.apps/worker scaled
+deployment "worker" successfully rolled out
+NAME                      READY   STATUS    RESTARTS   AGE
+worker-767ddb99df-x4r98   1/1     Running   0          4m35s
+
+VERDICT: PASS
+
+================================================================================
+PROOF 4: SELF-HEAL (API POD TERMINATION & ZERO DOWNTIME)
+Timestamp: 2026-11-11T13:10:01Z - 2026-11-11T13:10:12Z
+================================================================================
+COMMAND:
+Target API pod to delete: api-7754f66d89-74mct
+Health before delete: 200
+kubectl delete pod api-7754f66d89-74mct -n upwatch
+Health during pod replacement: 200
+kubectl rollout status deployment/api -n upwatch --timeout=60s
+
+OUTPUT:
+pod "api-7754f66d89-74mct" deleted from upwatch namespace
+Health during pod replacement: 200
+Waiting for deployment "api" rollout to finish: 1 of 2 updated replicas are available...
+deployment "api" successfully rolled out
+Health after replacement: 200
+NAME                   READY   STATUS    RESTARTS   AGE
+api-7754f66d89-9qd85   1/1     Running   0          5m23s
+api-7754f66d89-zh9h8   1/1     Running   0          11s
+
+VERDICT: PASS
+
+================================================================================
+PROOF 5: PERSISTENCE (PVC DATA PRESERVATION ACROSS MONGO POD DELETION)
+Timestamp: 2026-11-11T13:10:28Z - 2026-11-11T13:10:49Z
+================================================================================
+COMMAND:
+Before Mongo pod deletion: Monitor Example Test (6af468799ac245fab24e89f2) has 12 checks.
+Deleting mongo pod: mongo-668d7cb647-9xfch
+kubectl delete pod mongo-668d7cb647-9xfch -n upwatch
+kubectl rollout status deployment/mongo -n upwatch --timeout=120s
+
+OUTPUT:
+pod "mongo-668d7cb647-9xfch" deleted from upwatch namespace
+Waiting for deployment "mongo" rollout to finish: 0 of 1 updated replicas are available...
+deployment "mongo" successfully rolled out
+
+COMMAND (Verify monitor and checks by ID):
+GET http://localhost:8086/api/monitors/6af468799ac245fab24e89f2
+GET http://localhost:8086/api/monitors/6af468799ac245fab24e89f2/checks
+
+OUTPUT:
+After Mongo pod restart:
+Monitor ID: 6af468799ac245fab24e89f2
+Monitor Name: Example Test
+Monitor State: UP
+Checks count after restart: 13
+Earlier check preserved: 2026-11-11T13:07:06.427Z
+NAME                     READY   STATUS    RESTARTS   AGE
+mongo-668d7cb647-s52r4   1/1     Running   0          21s
+
+VERDICT: PASS
+
+================================================================================
+PROOF 6: ROLLING UPDATE + ROLLBACK
+Timestamp: 2026-11-11T13:11:41Z - 2026-11-11T13:12:40Z
+================================================================================
+NOTE: v2 is the same image as v1, tagged locally, to demonstrate the rollout mechanism.
+
+COMMAND (Tag & Load v2):
+docker tag farhan14031/upwatch-api:v1 farhan14031/upwatch-api:v2
+minikube image load farhan14031/upwatch-api:v2
+
+COMMAND (Rollout to v2 with live health polling):
+kubectl set image deployment/api api=farhan14031/upwatch-api:v2 -n upwatch
+
+OUTPUT:
+Starting rolling update to farhan14031/upwatch-api:v2...
+deployment.apps/api image updated
+Rollout completed in 21.5s
+Poll results during v1->v2 rolling update: Success=10, Failed=0
+deployment "api" successfully rolled out
+--- Rollout history after update to v2 ---
+deployment.apps/api 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+COMMAND (Rollout undo back to v1 with live health polling):
+kubectl rollout undo deployment/api -n upwatch
+
+OUTPUT:
+Starting rollout undo back to v1...
+deployment.apps/api rolled back
+Rollback completed in 21.3s
+Poll results during v2->v1 rollback: Success=10, Failed=0
+deployment "api" successfully rolled out
+--- Rollout history after undo to v1 ---
+deployment.apps/api 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+
+Confirmed active container image:
+farhan14031/upwatch-api:v1
+
+VERDICT: PASS
+================================================================================
