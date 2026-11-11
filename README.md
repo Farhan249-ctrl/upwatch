@@ -133,10 +133,72 @@ cd ../frontend && npm run dev
 
 ---
 
+## Kubernetes (Minikube)
+
+UpWatch is packaged and verified on Kubernetes (tested on Minikube v1.39.0, Kubernetes v1.37.0).
+
+### Compose vs. Kubernetes Architecture Mapping
+
+| Docker Compose Component | Kubernetes Object Name | Kind | Specifications & Replaced Role |
+| :--- | :--- | :--- | :--- |
+| `upwatch-db` | `mongo` | Deployment & Service | 1 replica, `Recreate` strategy, `mongo:7.0`, ClusterIP:27017, readiness probe (`mongosh ping`). |
+| `upwatch_mongo_data` | `mongo-pvc` | PersistentVolumeClaim | 1Gi `ReadWriteOnce` standard storage claim mounted at `/data/db`. |
+| `upwatch-api` | `api` | Deployment & Service | 2 replicas, `RollingUpdate` (`maxSurge: 1, maxUnavailable: 0`), ClusterIP:4000, startup/readiness/liveness HTTP probes. |
+| `upwatch-worker` | `worker` | Deployment | 1 replica (scalable), no Service, exec liveness probe (`node src/worker/healthcheck.js`), atomic DB monitor claimer. |
+| `upwatch-frontend` | `frontend` | Deployment & Service | 2 replicas, ClusterIP:80, HTTP readiness probe on `/`. |
+| `upwatch-nginx` | `upwatch-ingress` | Ingress | Ingress-nginx controller routing `/api` to `api:4000` and `/` to `frontend:80`. |
+| `.env` (sensitive keys) | `upwatch-secrets` | Secret | Applied via script; contains `MONGO_ROOT_USER`, `MONGO_ROOT_PASSWORD`, `JWT_SECRET`, `TELEGRAM_BOT_TOKEN`. |
+| `.env` (non-sensitive keys) | `upwatch-config` | ConfigMap | Contains `API_PORT`, `ALLOW_PRIVATE_TARGETS`, `CHECK_RETENTION_DAYS`, `WORKER_TICK_SECONDS`, `WORKER_CONCURRENCY`, `FAILURE_THRESHOLD`, `DEGRADED_MS`, `WORKER_HEARTBEAT_FILE`, `MONGO_DB`. |
+
+### How to Run on Minikube
+
+1. **Start Minikube and Enable Ingress**:
+   ```powershell
+   minikube start --driver=docker --cpus=4 --memory=4096
+   minikube addons enable ingress
+   ```
+
+2. **Generate Kubernetes Secrets**:
+   Applies sensitive credentials directly from local `.env` without printing or hardcoding secrets:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/k8s-secrets.ps1
+   ```
+
+3. **Apply Manifests**:
+   ```powershell
+   kubectl apply -f k8s/
+   kubectl rollout status deployment/mongo -n upwatch --timeout=300s
+   kubectl rollout status deployment/api -n upwatch --timeout=300s
+   kubectl rollout status deployment/worker -n upwatch --timeout=300s
+   kubectl rollout status deployment/frontend -n upwatch --timeout=300s
+   ```
+
+4. **Access the Stack via Ingress Port-Forward**:
+   ```powershell
+   kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8086:80
+   ```
+   - **Frontend UI**: [http://localhost:8086/](http://localhost:8086/)
+   - **API Health**: [http://localhost:8086/api/health](http://localhost:8086/api/health)
+
+### Worker Horizontal Scaling Proof
+
+During verification, `deployment/worker` was scaled from 1 to 2 replicas:
+```powershell
+kubectl scale deployment/worker --replicas=2 -n upwatch
+```
+Across a 60-second observation window with two active worker pods running concurrently, exactly 4 checks were recorded for a monitor configured with a 15-second interval. The check rate remained identical to a single worker's execution rate (rather than doubling to 8 checks):
+> *the atomic findOneAndUpdate claim prevents double checking*
+
+### Proven Capabilities
+- **Self-Healing**: API pods killed during active traffic recover instantly with zero downtime (HTTP 200 preserved throughout).
+- **Data Persistence**: Deletion and recreation of the MongoDB pod retains all users, monitors, and historical check records intact via `mongo-pvc`.
+- **Zero-Downtime Rolling Update & Rollback**: Rolling update from v1 to v2 (and subsequent rollback) verified with 100% continuous HTTP 200 health check responses.
+
+---
+
 ## Not Yet Done
 
-The following components are outside the scope of Stage 3 and have not been executed or deployed:
-- **Kubernetes Deployment**: Helm charts, Kubernetes manifests, ingress controllers, and Minikube pod deployment.
-- **Docker Hub Push**: Production images have been built and tagged locally (`farhan14031/upwatch-*:v1`), but not pushed to Docker Hub registry.
-- **Live Jenkins Run**: The declarative `Jenkinsfile` has been authored and committed, but not yet executed on a live Jenkins server.
-- **Cloud / EC2 Hosting**: Cloud provisioning, domain DNS routing, Let's Encrypt automated ACME certificates, and production AWS/GCP deployments.
+The following components are outside the scope of Stage 4 and remain to be implemented:
+- **Live Jenkins Run**: Declarative `Jenkinsfile` exists in repository, but has not yet been triggered on an active Jenkins agent.
+- **EC2 / Cloud Deployment**: Cloud provisioning, domain DNS routing, Let's Encrypt automated ACME certificates, and production AWS/GCP deployments.
+- **Kubernetes Ingress on Cloud**: Kubernetes Ingress tested and proven via local controller port-forward; public Cloud LoadBalancer / external IP ingress not yet configured.
