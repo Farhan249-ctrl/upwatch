@@ -1,0 +1,152 @@
+﻿
+================================================================================
+[TIMESTAMP: 2026-11-11T11:42:22Z] UPWATCH STAGE 3 VERIFICATION EVIDENCE
+================================================================================
+Stack: 5 containers (nginx, frontend, api, worker, mongo)
+
+================================================================================
+[TIMESTAMP: 2026-11-11T11:42:22Z] VERIFICATION 1: HTTPS 8444 HTTP STATUS
+================================================================================
+HTTP Code: 200
+
+================================================================================
+[TIMESTAMP: 2026-11-11T11:42:22Z] VERIFICATION 2: HTTP 8082 REDIRECT
+================================================================================
+Redirect Result: 301 https://localhost:8444/
+
+================================================================================
+[TIMESTAMP: 2026-11-11T11:42:23Z] VERIFICATION 3: REGISTER, LOGIN, CREATE MONITOR
+================================================================================
+Registered User ID: 6af4549e561e474a2540f9f5
+Monitor ID: 6af4549f561e474a2540f9f6
+Monitor Creation Response: {"userId":"6af4549e561e474a2540f9f5","name":"API Health Target","url":"http://api:4000/api/health","intervalSeconds":15,"timeoutMs":5000,"expectedStatus":[],"allowSelfSigned":false,"active":true,"state":"UNKNOWN","consecutiveFailures":0,"firstFailureAt":null,"lastCheckedAt":null,"nextCheckAt":"2026-11-11T11:42:23.117Z","_id":"6af4549f561e474a2540f9f6","createdAt":"2026-11-11T11:42:23.120Z"}
+
+================================================================================
+[TIMESTAMP: 2026-11-11T11:42:23Z] VERIFICATION 4: MONGO UNPUBLISHED PORT
+================================================================================
+docker compose port mongo 27017 output: ':0'
+docker ps port mapping: 'upwatch-db: 27017/tcp'
+
+================================================================================
+[TIMESTAMP: 2026-11-11T11:42:42Z] VERIFICATION 5: WORKER CHECKING & MONITOR STATE
+================================================================================
+Monitor Status: [{"_id":"6af4549f561e474a2540f9f6","userId":"6af4549e561e474a2540f9f5","name":"API Health Target","url":"http://api:4000/api/health","intervalSeconds":15,"timeoutMs":5000,"expectedStatus":[],"allowSelfSigned":false,"active":true,"state":"UP","consecutiveFailures":0,"firstFailureAt":null,"lastCheckedAt":"2026-11-11T11:42:23.707Z","nextCheckAt":"2026-11-11T11:42:38.696Z","createdAt":"2026-11-11T11:42:23.120Z"}]
+Recent Checks: [{"_id":"6af4549f1e8efc9b4bcc2eaa","monitorId":"6af4549f561e474a2540f9f6","ts":"2026-11-11T11:42:23.707Z","ok":true,"statusCode":200,"responseMs":4,"error":null}]
+Worker Logs Tail:
+Worker connected to MongoDB
+Worker running: tick=5s, concurrency=10
+
+
+================================================================================
+[TIMESTAMP: 2026-11-11T11:43:04Z] VERIFICATION 6: PERSISTENCE (DOWN WITHOUT -V, UP AGAIN)
+================================================================================
+Login After Restart: {"user":{"id":"6af4549e561e474a2540f9f5","name":"Evidence User","email":"evidence_user_62449f30@upwatch.dev","role":"USER","telegramChatId":null,"alertsEnabled":false,"createdAt":"2026-11-11T11:42:22.687Z"},"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWY0NTQ5ZTU2MWU0NzRhMjU0MGY5ZjUiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc5NDM5NzM4NCwiZXhwIjoxNzk1MDAyMTg0fQ.rbNv0D8JKtnSxFXqZb0f-XLJR0WnyOnTBis6H9oVYB8"}
+Monitors After Restart: [{"_id":"6af4549f561e474a2540f9f6","userId":"6af4549e561e474a2540f9f5","name":"API Health Target","url":"http://api:4000/api/health","intervalSeconds":15,"timeoutMs":5000,"expectedStatus":[],"allowSelfSigned":false,"active":true,"state":"UP","consecutiveFailures":0,"firstFailureAt":null,"lastCheckedAt":"2026-11-11T11:43:03.913Z","nextCheckAt":"2026-11-11T11:43:18.731Z","createdAt":"2026-11-11T11:42:23.120Z"}]
+
+================================================================================
+[TIMESTAMP: 2026-11-11T11:43:07Z] VERIFICATION 7: DOCKER STATS & CONTAINER LOGS
+================================================================================
+--- DOCKER STATS ---
+CONTAINER ID   NAME                CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O         PIDS
+dbeba4ca66cf   upwatch-nginx       0.00%     11.34MiB / 128MiB     8.86%     7.37kB / 9.65kB   102kB / 12.3kB    13
+766664ae0d57   upwatch-worker      7.76%     31.73MiB / 256MiB     12.39%    13.5kB / 14.1kB   0B / 0B           11
+c12828635c1f   upwatch-api         6.63%     35.73MiB / 384MiB     9.30%     11.8kB / 15.7kB   0B / 0B           11
+eae9fbf95046   upwatch-db          19.83%    182.3MiB / 512MiB     35.60%    22.9kB / 15.6kB   2.05MB / 73.7kB   45
+d68664e4dc02   upwatch-frontend    0.12%     10.75MiB / 128MiB     8.40%     2.61kB / 1.28kB   287kB / 4.1kB     13
+a300fb19732a   upwatch-mongo-1     1.09%     179.3MiB / 7.436GiB   2.35%     110kB / 85.7kB    1.38MB / 1.87MB   41
+a8adda41dadc   slotlock-nginx      0.00%     2.77MiB / 7.436GiB    0.04%     41.8kB / 22.6kB   164kB / 4.1kB     2
+723febceba87   slotlock-backend    0.17%     304MiB / 7.436GiB     3.99%     83kB / 81kB       56.2MB / 176kB    47
+a526afcb5636   slotlock-postgres   0.00%     101.1MiB / 7.436GiB   1.33%     82kB / 81.1kB     17MB / 229kB      56
+eaa3e10581ad   slotlock-frontend   0.00%     10.18MiB / 7.436GiB   0.13%     20.4kB / 39.6kB   201kB / 4.1kB     13
+
+
+--- NGINX LOGS ---
+docker : 2026/11/11 11:43:01 [notice] 1#1: OS: Linux 6.18.54.1-microsoft-standard-WSL2
+At C:\Users\farha\upwatch\scripts\evidence.ps1:97 char:15
++ $nginxLogs = (docker logs upwatch-nginx --tail 20 2>&1) | Out-String
++               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026/11/11 11:4...t-standard-WSL2:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026/11/11 11:43:01 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2026/11/11 11:43:01 [notice] 1#1: start worker processes
+2026/11/11 11:43:01 [notice] 1#1: start worker process 36
+2026/11/11 11:43:01 [notice] 1#1: start worker process 37
+2026/11/11 11:43:01 [notice] 1#1: start worker process 38
+2026/11/11 11:43:01 [notice] 1#1: start worker process 39
+2026/11/11 11:43:01 [notice] 1#1: start worker process 40
+2026/11/11 11:43:01 [notice] 1#1: start worker process 41
+2026/11/11 11:43:01 [notice] 1#1: start worker process 42
+2026/11/11 11:43:01 [notice] 1#1: start worker process 43
+2026/11/11 11:43:01 [notice] 1#1: start worker process 44
+2026/11/11 11:43:01 [notice] 1#1: start worker process 45
+2026/11/11 11:43:01 [notice] 1#1: start worker process 46
+2026/11/11 11:43:01 [notice] 1#1: start worker process 47
+172.21.0.1 - - [11/Nov/2026:11:43:04 +0000] "POST /api/auth/login HTTP/1.1" 200 413 "-" "curl/8.22.0" "-"
+2026/11/11 11:43:06 [notice] 1#1: signal 17 (SIGCHLD) received from 55
+172.21.0.1 - - [11/Nov/2026:11:43:04 +0000] "GET /api/monitors HTTP/1.1" 200 412 "-" "curl/8.22.0" "-"
+127.0.0.1 - - [11/Nov/2026:11:43:06 +0000] "GET / HTTP/1.1" 200 427 "-" "Wget" "-"
+2026/11/11 11:43:06 [notice] 1#1: unknown process 55 exited with code 0
+
+
+--- FRONTEND LOGS ---
+docker : 2026/11/11 11:42:49 [notice] 1#1: nginx/1.27.5
+At C:\Users\farha\upwatch\scripts\evidence.ps1:98 char:18
++ $frontendLogs = (docker logs upwatch-frontend --tail 20 2>&1) | Out-S ...
++                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026/11/11 11:4...1: nginx/1.27.5:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026/11/11 11:42:49 [notice] 1#1: built by gcc 14.2.0 (Alpine 14.2.0) 
+127.0.0.1 - - [11/Nov/2026:11:42:53 +0000] "GET / HTTP/1.1" 200 427 "-" "Wget" "-"
+127.0.0.1 - - [11/Nov/2026:11:43:03 +0000] "GET / HTTP/1.1" 200 427 "-" "Wget" "-"
+172.21.0.4 - - [11/Nov/2026:11:43:06 +0000] "GET / HTTP/1.1" 200 427 "-" "Wget" "-"
+2026/11/11 11:42:49 [notice] 1#1: OS: Linux 6.18.54.1-microsoft-standard-WSL2
+2026/11/11 11:42:49 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2026/11/11 11:42:49 [notice] 1#1: start worker processes
+2026/11/11 11:42:49 [notice] 1#1: start worker process 29
+2026/11/11 11:42:49 [notice] 1#1: start worker process 30
+2026/11/11 11:42:49 [notice] 1#1: start worker process 31
+2026/11/11 11:42:49 [notice] 1#1: start worker process 32
+2026/11/11 11:42:49 [notice] 1#1: start worker process 33
+2026/11/11 11:42:49 [notice] 1#1: start worker process 34
+2026/11/11 11:42:49 [notice] 1#1: start worker process 35
+2026/11/11 11:42:49 [notice] 1#1: start worker process 36
+2026/11/11 11:42:49 [notice] 1#1: start worker process 37
+2026/11/11 11:42:49 [notice] 1#1: start worker process 38
+2026/11/11 11:42:49 [notice] 1#1: start worker process 39
+2026/11/11 11:42:49 [notice] 1#1: start worker process 40
+
+
+--- API LOGS ---
+Connected to MongoDB
+UpWatch API server running on port 4000
+
+
+--- WORKER LOGS ---
+Worker connected to MongoDB
+Worker running: tick=5s, concurrency=10
+
+
+--- DB LOGS ---
+{"t":{"$date":"2026-11-11T11:43:06.203+00:00"},"s":"I",  "c":"ACCESS",   "id":10483900,"ctx":"conn15","msg":"Connection not authenticating","attr":{"client":"127.0.0.1:34636","doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.208+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"127.0.0.1:34652","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"95f80a6a-415e-4da4-a43c-c3ce93ce26b7"}},"connectionId":16,"connectionCount":11}}
+{"t":{"$date":"2026-11-11T11:43:06.209+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn16","msg":"client metadata","attr":{"remote":"127.0.0.1:34652","client":"conn16","negotiatedCompressors":[],"doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.209+00:00"},"s":"I",  "c":"ACCESS",   "id":10483900,"ctx":"conn16","msg":"Connection not authenticating","attr":{"client":"127.0.0.1:34652","doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.293+00:00"},"s":"I",  "c":"NETWORK",  "id":6788700, "ctx":"conn16","msg":"Received first command on ingress connection since session start or auth handshake","attr":{"elapsedMillis":83}}
+{"t":{"$date":"2026-11-11T11:43:06.509+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"127.0.0.1:34668","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"3b6b6f86-36dc-4fee-99f1-f2dd0cb4343d"}},"connectionId":17,"connectionCount":12}}
+{"t":{"$date":"2026-11-11T11:43:06.510+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"127.0.0.1:34674","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"14240d18-4c78-439e-8832-2b37d955cb5b"}},"connectionId":18,"connectionCount":13}}
+{"t":{"$date":"2026-11-11T11:43:06.514+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn17","msg":"client metadata","attr":{"remote":"127.0.0.1:34668","client":"conn17","negotiatedCompressors":[],"doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.514+00:00"},"s":"I",  "c":"ACCESS",   "id":10483900,"ctx":"conn17","msg":"Connection not authenticating","attr":{"client":"127.0.0.1:34668","doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.514+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn18","msg":"client metadata","attr":{"remote":"127.0.0.1:34674","client":"conn18","negotiatedCompressors":[],"doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.514+00:00"},"s":"I",  "c":"ACCESS",   "id":10483900,"ctx":"conn18","msg":"Connection not authenticating","attr":{"client":"127.0.0.1:34674","doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.518+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"127.0.0.1:34680","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"ad5ae1f4-e55d-4018-aaee-9af0b2355141"}},"connectionId":19,"connectionCount":14}}
+{"t":{"$date":"2026-11-11T11:43:06.585+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn19","msg":"client metadata","attr":{"remote":"127.0.0.1:34680","client":"conn19","negotiatedCompressors":[],"doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.585+00:00"},"s":"I",  "c":"ACCESS",   "id":10483900,"ctx":"conn19","msg":"Connection not authenticating","attr":{"client":"127.0.0.1:34680","doc":{"application":{"name":"mongosh 2.14.0"},"driver":{"name":"nodejs|mongosh","version":"7.5.0|2.14.0"},"platform":"Node.js v24.22.1, LE","os":{"name":"linux","architecture":"x64","version":"3.10.0-327.22.2.el7.x86_64","type":"Linux"},"env":{"container":{"runtime":"docker"}}}}}
+{"t":{"$date":"2026-11-11T11:43:06.591+00:00"},"s":"I",  "c":"NETWORK",  "id":6788700, "ctx":"conn19","msg":"Received first command on ingress connection since session start or auth handshake","attr":{"elapsedMillis":5}}
+{"t":{"$date":"2026-11-11T11:43:06.595+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn15","msg":"Connection ended","attr":{"remote":"127.0.0.1:34636","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"79e11e3c-a3b0-4324-b0a1-15c2d5b48e6d"}},"connectionId":15,"connectionCount":13}}
+{"t":{"$date":"2026-11-11T11:43:06.596+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn19","msg":"Connection ended","attr":{"remote":"127.0.0.1:34680","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"ad5ae1f4-e55d-4018-aaee-9af0b2355141"}},"connectionId":19,"connectionCount":12}}
+{"t":{"$date":"2026-11-11T11:43:06.596+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn18","msg":"Connection ended","attr":{"remote":"127.0.0.1:34674","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"14240d18-4c78-439e-8832-2b37d955cb5b"}},"connectionId":18,"connectionCount":11}}
+{"t":{"$date":"2026-11-11T11:43:06.596+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn17","msg":"Connection ended","attr":{"remote":"127.0.0.1:34668","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"3b6b6f86-36dc-4fee-99f1-f2dd0cb4343d"}},"connectionId":17,"connectionCount":10}}
+{"t":{"$date":"2026-11-11T11:43:06.596+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn16","msg":"Connection ended","attr":{"remote":"127.0.0.1:34652","isLoadBalanced":false,"uuid":{"uuid":{"$uuid":"95f80a6a-415e-4da4-a43c-c3ce93ce26b7"}},"connectionId":16,"connectionCount":9}}
+

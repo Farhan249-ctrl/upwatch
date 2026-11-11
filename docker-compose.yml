@@ -48,7 +48,7 @@ services:
       - edge
       - private
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:$${API_PORT:-4000}/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:$${API_PORT:-4000}/api/health || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -108,7 +108,7 @@ services:
     networks:
       - edge
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/ || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -141,7 +141,7 @@ services:
     networks:
       - edge
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider --no-check-certificate https://localhost/ || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider --no-check-certificate https://127.0.0.1/ || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
