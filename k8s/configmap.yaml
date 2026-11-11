@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upwatch-config
+  namespace: upwatch
+data:
+  API_PORT: "4000"
+  # ALLOW_PRIVATE_TARGETS=true is demo-only: allows monitoring endpoints on private networks
+  ALLOW_PRIVATE_TARGETS: "true"
+  CHECK_RETENTION_DAYS: "30"
+  WORKER_TICK_SECONDS: "5"
+  WORKER_CONCURRENCY: "10"
+  FAILURE_THRESHOLD: "2"
+  DEGRADED_MS: "1500"
+  WORKER_HEARTBEAT_FILE: "/tmp/worker-heartbeat"
+  MONGO_DB: "upwatch"

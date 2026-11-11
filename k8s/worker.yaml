@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: upwatch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: farhan14031/upwatch-worker:v1
+          imagePullPolicy: IfNotPresent
+          command:
+            - node
+            - src/worker/index.js
+          envFrom:
+            - configMapRef:
+                name: upwatch-config
+          env:
+            - name: MONGO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: upwatch-secrets
+                  key: MONGO_ROOT_USER
+            - name: MONGO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: upwatch-secrets
+                  key: MONGO_ROOT_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: upwatch-secrets
+                  key: JWT_SECRET
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: upwatch-secrets
+                  key: TELEGRAM_BOT_TOKEN
+                  optional: true
+            - name: MONGO_URI
+              value: "mongodb://$(MONGO_ROOT_USER):$(MONGO_ROOT_PASSWORD)@mongo:27017/$(MONGO_DB)?authSource=admin"
+          livenessProbe:
+            exec:
+              command:
+                - node
+                - src/worker/healthcheck.js
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
