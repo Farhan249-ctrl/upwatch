@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { claimDueMonitor } = require('./claimer');
 const { runCheckAndProcess } = require('./checker');
 const config = require('../config');
@@ -6,13 +8,33 @@ class Worker {
   constructor(options = {}) {
     this.tickSeconds = options.tickSeconds || config.WORKER_TICK_SECONDS;
     this.concurrency = options.concurrency || config.WORKER_CONCURRENCY;
+    this.heartbeatFile =
+      options.heartbeatFile !== undefined
+        ? options.heartbeatFile
+        : config.WORKER_HEARTBEAT_FILE;
     this.isRunning = false;
     this.timer = null;
     this.activeChecks = new Set();
   }
 
+  writeHeartbeat() {
+    try {
+      if (this.heartbeatFile) {
+        const dir = path.dirname(this.heartbeatFile);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(this.heartbeatFile, new Date().toISOString(), 'utf8');
+      }
+    } catch (err) {
+      console.error('Failed to write worker heartbeat file:', err.message);
+    }
+  }
+
   async tick() {
     if (!this.isRunning) return;
+
+    this.writeHeartbeat();
 
     try {
       const claimedMonitors = [];

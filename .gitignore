@@ -1,6 +1,9 @@
 .env
 *.pem
 *.log
+nginx/certs/
+*.key
+*.crt
 node_modules/
 coverage/
 dist/

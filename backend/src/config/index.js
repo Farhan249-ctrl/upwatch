@@ -48,6 +48,7 @@ const config = {
   CHECK_RETENTION_DAYS: parseInt(process.env.CHECK_RETENTION_DAYS || '30', 10),
   WORKER_TICK_SECONDS: parseInt(process.env.WORKER_TICK_SECONDS || '5', 10),
   WORKER_CONCURRENCY: parseInt(process.env.WORKER_CONCURRENCY || '10', 10),
+  WORKER_HEARTBEAT_FILE: process.env.WORKER_HEARTBEAT_FILE || '/tmp/worker-heartbeat',
   FAILURE_THRESHOLD: parseInt(process.env.FAILURE_THRESHOLD || '2', 10),
   DEGRADED_MS: parseInt(process.env.DEGRADED_MS || '1500', 10),
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
