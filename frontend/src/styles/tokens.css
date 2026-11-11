@@ -1,0 +1,112 @@
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+
+:root {
+  /* Design Tokens - Light Theme */
+  --color-paper: #F2F4F6;
+  --color-surface: #FFFFFF;
+  --color-ink: #0F1B26;
+  --color-muted: #5B6B7A;
+  --color-line: #DDE3E8;
+  --color-accent: #2347C5;
+  --color-accent-hover: #1b38a3;
+  --color-up: #148A5B;
+  --color-degraded: #B7791F;
+  --color-down: #C93C3C;
+  --color-nodata: #C3CBD3;
+
+  /* Typography Scale */
+  --font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 28px;
+  --text-hero: 40px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Layout */
+  --rail-width: 232px;
+  --max-content-width: 1120px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #0C1117;
+    --color-surface: #121A22;
+    --color-ink: #E6EDF3;
+    --color-muted: #8A9BAB;
+    --color-line: #223040;
+    --color-accent: #6E8BFF;
+    --color-accent-hover: #8da4ff;
+    --color-up: #34C48A;
+    --color-degraded: #E0A23A;
+    --color-down: #F06A6A;
+    --color-nodata: #3A4856;
+  }
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numbers on every number */
+.tabular,
+[data-tabular="true"],
+.num,
+time,
+table td,
+.stat-figure,
+.bucket-bar {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus styles for keyboard accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
