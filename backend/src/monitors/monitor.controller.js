@@ -2,6 +2,7 @@ const { z } = require('zod');
 const monitorService = require('./monitor.service');
 const checkService = require('../checks/check.service');
 const incidentService = require('../incidents/incident.service');
+const Check = require('../checks/check.model');
 
 const createMonitorSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -113,6 +114,20 @@ async function getIncidents(req, res, next) {
   }
 }
 
+async function getChecks(req, res, next) {
+  try {
+    await monitorService.getMonitorById(req.user.id, req.params.id);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit || '50', 10)));
+    const checks = await Check.find({ monitorId: req.params.id })
+      .sort({ ts: -1 })
+      .limit(limit)
+      .lean();
+    return res.status(200).json(checks);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createMonitorSchema,
   patchMonitorSchema,
@@ -124,4 +139,5 @@ module.exports = {
   getStats,
   getSeries,
   getIncidents,
+  getChecks,
 };

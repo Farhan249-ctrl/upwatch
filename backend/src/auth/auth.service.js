@@ -20,6 +20,8 @@ function sanitizeUser(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    telegramChatId: user.telegramChatId || null,
+    alertsEnabled: user.alertsEnabled === true,
     createdAt: user.createdAt,
   };
 }
@@ -77,8 +79,29 @@ async function getMe(userId) {
   return sanitizeUser(user);
 }
 
+async function updateAlerts(userId, { telegramChatId, alertsEnabled }) {
+  const user = await User.findById(userId);
+  if (!user) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (telegramChatId !== undefined) {
+    user.telegramChatId = telegramChatId ? String(telegramChatId).trim() : null;
+  }
+  if (alertsEnabled !== undefined) {
+    user.alertsEnabled = Boolean(alertsEnabled);
+  }
+
+  await user.save();
+  return sanitizeUser(user);
+}
+
 module.exports = {
   register,
   login,
   getMe,
+  updateAlerts,
+  sanitizeUser,
 };

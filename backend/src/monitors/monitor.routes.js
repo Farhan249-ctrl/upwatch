@@ -16,5 +16,6 @@ router.delete('/:id', monitorController.remove);
 router.get('/:id/stats', monitorController.getStats);
 router.get('/:id/series', monitorController.getSeries);
 router.get('/:id/incidents', monitorController.getIncidents);
+router.get('/:id/checks', monitorController.getChecks);
 
 module.exports = router;

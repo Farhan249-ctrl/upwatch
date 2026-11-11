@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node src/index.js",
     "worker": "node src/worker/index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --detectOpenHandles --forceExit"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --detectOpenHandles --forceExit",
+    "seed:demo": "node ../scripts/seed-demo.js",
+    "seed:demo:clear": "node ../scripts/seed-demo.js --clear"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

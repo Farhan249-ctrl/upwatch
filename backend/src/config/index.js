@@ -49,6 +49,10 @@ const config = {
   WORKER_TICK_SECONDS: parseInt(process.env.WORKER_TICK_SECONDS || '5', 10),
   WORKER_CONCURRENCY: parseInt(process.env.WORKER_CONCURRENCY || '10', 10),
   FAILURE_THRESHOLD: parseInt(process.env.FAILURE_THRESHOLD || '2', 10),
+  DEGRADED_MS: parseInt(process.env.DEGRADED_MS || '1500', 10),
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
+  DEMO_EMAIL: process.env.DEMO_EMAIL || 'demo@upwatch.dev',
+  DEMO_PASSWORD: process.env.DEMO_PASSWORD || 'DemoSecretPassword123!',
 };
 
 module.exports = config;

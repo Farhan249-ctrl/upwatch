@@ -23,6 +23,15 @@ const userSchema = new mongoose.Schema(
       enum: ['USER', 'ADMIN'],
       default: 'USER',
     },
+    telegramChatId: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    alertsEnabled: {
+      type: Boolean,
+      default: false,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
