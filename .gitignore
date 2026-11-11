@@ -1,5 +1,6 @@
 .env
 *.pem
+*.log
 node_modules/
 coverage/
 dist/

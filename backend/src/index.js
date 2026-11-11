@@ -6,7 +6,7 @@ async function start() {
   await connectDB();
   console.log('Connected to MongoDB');
 
-  const server = app.listen(config.API_PORT, () => {
+  const server = app.listen(config.API_PORT, '0.0.0.0', () => {
     console.log(`UpWatch API server running on port ${config.API_PORT}`);
   });
 
